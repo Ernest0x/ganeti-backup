@@ -1,0 +1,15 @@
+---
+- hosts: ${target}
+  user: root
+
+  vars:
+    dist_dir: ../
+    base_dir: /opt/ganeti-backup
+
+  tasks:
+    - name: Rsync project files to target
+      command: /usr/bin/rsync --exclude='*.j2' --delete -rl ${dist_dir} root@${inventory_hostname}:${base_dir}
+      delegate_to: localhost
+
+    - name: Create configuration file from template
+      template: src=${dist_dir}/conf.py.j2 dest=${base_dir}/conf.py mode=600

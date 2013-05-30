@@ -1,0 +1,22 @@
+---
+- name: Install required packages on node
+  action: apt pkg=${item}
+  with_items:
+    - parted
+    - partclone
+ 
+- name: Create destination path for ganeti-backup on node
+  action: file state=directory path=/tmp/ganeti-backup
+
+- name: Copy ganeti-backup files on node
+  action: copy src=/opt/ganeti-backup/${item.filename} dest=/tmp/ganeti-backup/${item.filename} mode=${item.mode}
+  with_items:
+    - filename: conf.py
+      mode: 600
+    - filename: conf_checker.py
+      mode: 640
+    - filename: check_templates.py
+      mode: 640
+    - filename: ganeti-backup.py
+      mode: 740
+

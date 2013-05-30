@@ -1,0 +1,35 @@
+# NOTE: The following vars are all necessary and they should be
+# included in the ansible inventory. This file exists only for
+# documentation purposes.
+
+smtp_host: mail.example.org
+smtp_port: 25
+smtp_auth_user: callcal@example.org
+smtp_auth_password: somepassword
+server_email: callcal@example.org
+admin_email: admin@example.org
+
+master_node: master.example.org
+
+# Rapi user passwords can be produced through:
+# $ echo -n 'jack:Ganeti Remote API:abc123' | openssl md5
+rapi_users:
+    backup:
+      password: 'passwd2'
+      password_hash: '{HA1}bea84a4423286940ac6dc085fff1de40'
+
+instances_export_rootpath: /var/lib/ganeti/exports
+instances_export_format: partclone
+instances_export_method: mounts
+
+instances:
+    - name: instance1.example.org
+      exports:
+        - disk: 0
+          partitions: "'all'"
+        - disk: 1
+          partitions: "[1, 2]"
+    - name: instance2.example.org
+      exports:
+        - disk: 0
+          partitions: "'all'"

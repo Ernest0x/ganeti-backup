@@ -1,0 +1,144 @@
+# (c) 2013, Petros Moisiadis <ernest0x@yahoo.gr>
+#
+# ganeti-backup is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# ganeti-backup is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ganeti-backup.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# Ganeti RAPI settings:
+# ---------------------
+GANETI_RAPI_HOST = '{{ master_node }}'
+GANETI_RAPI_PORT = 5080
+GANETI_RAPI_USERNAME = 'backup'
+GANETI_RAPI_PASSWORD = '{{ rapi_users.backup.password }}'
+
+
+# REPORT_ACTIONS: A list of actions for which to send error reports
+# -----------------------------------------------------------------
+# Available actions:
+#   'export', 'clean'
+#
+# Leave empty to print errors to standard error instead of sending
+# error reports.
+REPORT_ACTIONS = ['clean', 'export']
+
+
+# Email settings to use when sending error reports:
+# -------------------------------------------------
+SMTP_HOST = '{{ smtp_host }}'
+SMTP_PORT = {{ smtp_port }}
+SMTP_AUTH_USER = '{{ smtp_auth_user }}'
+SMTP_AUTH_PASSWORD = '{{ smtp_auth_password'
+EMAIL_FROM = '{{ server_email }}'
+EMAIL_TO = ['{{ admin_email }}']
+
+
+# EXPORTS_ROOT: root directory for storing exports:
+# -------------------------------------------------
+EXPORTS_ROOT = '{{ instances_export_rootpath }}'
+
+
+# EXPORT_FORMAT: the format of the data exports: 
+# ----------------------------------------------
+# Supported formats:
+#        'raw': Data exports are created as raw disk/partition image
+#               files (all blocks are exported).
+#  'partclone': Data exports are created as partition image files in
+#               partclone format (only used blocks are exported).
+#
+# This option is not taken into account if EXPORT_METHOD option (see 
+# below) is set to 'mounts'.
+EXPORT_FORMAT = '{{ instances_export_format }}'
+
+
+# EXPORT_METHOD: the method of exporting data exports:
+# ----------------------------------------------------
+#  'files': Data exports are created as regular files.
+#           A backup utility/script is expected to run the export script
+#           first and then include the created files for backup.
+#
+#  'pipes': Data exports are created as named pipes (FIFOs) that are 
+#           connected to the standard output of a 'sleeping' process
+#           waiting to do the actual export/cloning.
+#           A backup utility/script that can open FIFOs is expected to
+#           run the export script first and then open the created pipes
+#           in order to wake up the exporting process.
+#
+# 'mounts': Data exports are created as mount points for the partitions
+#           of the exported disks. If an exported disk is being exported
+#           as a whole (see 'whole_disk' option below), then an image file
+#           of the whole disk is created instead, as if the 'files' export
+#           method option had been used.
+#           A backup utility/script is expected to run the export script 
+#           first and then include the created mount points for backup.
+#
+# In all cases, the clean script should be run after the execution of the
+# backup utility/script in order to clean any interemediate files, mount
+# points and/or devices created by the export script.
+EXPORT_METHOD = '{{ instances_export_method }}'
+
+
+# EXPORTS: configure what to export:
+# ----------------------------------
+# This is a dictionary consisting of key/value pairs with each key being the
+# name of the ganeti instance to be exported and the corresponding value being
+# a list of disk export definitions.
+# Each disk export definition is a dictionary with a 'disk' key associated
+# with a disk number value and a 'partitions' key associated with a list of
+# partition numbers to export or one of the following values:
+#         'all': To export separate image files for all the partitions in the
+#                disk.
+#  'whole_disk': To export a single image file of the whole disk. This imposes
+#                the 'raw' export format and 'files' export method.
+#
+# Instances are only exported to their primary nodes.
+#
+# for example:
+#
+#   EXPORTS = {
+#       'instance1.example.com': [
+#           {
+#               'disk': 0,
+#               'partitions': 'all'
+#           }
+#       ],
+#       'instance2.example.com': [
+#           {
+#               'disk': 0,
+#               'partitions': [1, 2]
+#           }
+#       ],
+#       'instance3.example.com': [
+#           {
+#               'disk': 0,
+#               'partitions': 'all'
+#           },
+#           {
+#               'disk': 1,
+#               'partitions': 'all'
+#           }
+#       ]
+#   }
+
+EXPORTS = {
+{% for instance in instances %}
+    '{{ instance.name }}': [
+{% for export in instance.exports %}
+        {
+            'disk': {{ export.disk }},
+            'partitions': {{ export.partitions }}
+        }{% if not loop.last %},{% endif %}
+{% endfor %}
+    ]{% if not loop.last %},{% endif %}
+{% endfor %}
+}
+# vim: set filetype=python expandtab tabstop=4 shiftwidth=4 autoindent smartindent:

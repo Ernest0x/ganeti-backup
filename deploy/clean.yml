@@ -1,0 +1,9 @@
+---
+- hosts: ${target}
+  user: root
+ 
+  tasks:
+  - include: common.yml
+
+  - name: Run ganeti-backup clean script
+    action: command /usr/bin/nice -n 20 /usr/bin/ionice -c 2 -n 7 /tmp/ganeti-backup/ganeti-backup.py clean
