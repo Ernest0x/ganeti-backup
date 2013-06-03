@@ -2,34 +2,102 @@
 # included in the ansible inventory. This file exists only for
 # documentation purposes.
 
-smtp_host: mail.example.org
-smtp_port: 25
-smtp_auth_user: callcal@example.org
-smtp_auth_password: somepassword
-server_email: callcal@example.org
-admin_email: admin@example.org
-
+# Ganeti settings
 master_node: master.example.org
-
-# Rapi user passwords can be produced through:
+# Rapi user password hashes can be produced through:
 # $ echo -n 'jack:Ganeti Remote API:abc123' | openssl md5
+# Do not forget to prepend the hash string with '{HA1}'
 rapi_users:
-    backup:
-      password: 'passwd2'
-      password_hash: '{HA1}bea84a4423286940ac6dc085fff1de40'
+  backup:
+    password: 'passwd'
+    password_hash: '{HA1}02ce36bae628151fd6d068454221bd83'
 
+# instances_export_rootpath: root directory for storing exports:
+# --------------------------------------------------------------
 instances_export_rootpath: /var/lib/ganeti/exports
+
+# instances_export_format: the format of the data exports: 
+# --------------------------------------------------------
+# Supported formats:
+#        raw: Data exports are created as raw disk/partition image
+#             files (all blocks are exported).
+#  partclone: Data exports are created as partition image files in
+#             partclone format (only used blocks are exported).
+#
+# This option is not taken into account if instances_export_method
+# option (see below) is set to 'mounts'.
 instances_export_format: partclone
+
+# instances_export_method: the method of exporting data exports:
+# ----------------------------------------------------
+#  files: Data exports are created as regular files.
+#         A backup utility/script is expected to run the export script
+#         first and then include the created files for backup.
+#
+#  pipes: Data exports are created as named pipes (FIFOs) that are 
+#         connected to the standard output of a 'sleeping' process
+#         waiting to do the actual export/cloning.
+#         A backup utility/script that can open FIFOs is expected to
+#         run the export script first and then open the created pipes
+#         in order to wake up the exporting process.
+#
+# mounts: Data exports are created as mount points for the partitions
+#         of the exported disks. If an exported disk is being exported
+#         as a whole (see 'whole_disk' option below), then an image file
+#         of the whole disk is created instead, as if the 'files' export
+#         method option had been used.
+#         A backup utility/script is expected to run the export script 
+#         first and then include the created mount points for backup.
+#
+# In all cases, the clean script should be run after the execution of the
+# backup utility/script in order to clean any interemediate files, mount
+# points and/or devices created by the export script.
 instances_export_method: mounts
 
+# instances: configure what to export:
+# ------------------------------------
+# This is a list of ganeti instances with each item in the list holding
+# the name of the instance and a list of disk export definitions.
+# Each disk export definition is a dictionary with a 'disk' key associated
+# with a disk number value and a 'partitions' key associated with a pythonic
+# list of partition numbers to export or one of the following values:
+#         all: To export separate image files for all the partitions in the
+#              disk.
+#  whole_disk: To export a single image file of the whole disk. This imposes
+#              the 'raw' export format and 'files' export method.
+#
+# Instances are only exported to their primary nodes.
+#
+# for example:
 instances:
-    - name: instance1.example.org
-      exports:
-        - disk: 0
-          partitions: "'all'"
-        - disk: 1
-          partitions: "[1, 2]"
-    - name: instance2.example.org
-      exports:
-        - disk: 0
-          partitions: "'all'"
+  - name: instance1.example.org
+    exports:
+      - disk: 0
+        partitions: all
+      - disk: 1
+        partitions: '[1, 2]'
+  - name: instance2.example.org
+    exports:
+      - disk: 0
+        partitions: all
+
+# report_actions: A list of actions for which to send error reports
+# -----------------------------------------------------------------
+# Available actions:
+#   export, clean
+#
+# Can be set to False to print errors to standard error instead of sending
+# error reports.
+report_actions:
+  - clean
+  - export
+
+# Email settings to use when sending error reports:
+# -------------------------------------------------
+smtp_host: mail.example.org
+smtp_port: 25
+smtp_auth_user: ganeti-backup@example.org
+smtp_auth_password: somepassword
+server_email: ganeti-backup@example.org
+admin_email: admin@example.org
+
