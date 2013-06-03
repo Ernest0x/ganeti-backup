@@ -14,15 +14,15 @@ instance and on the host used to install ganeti-backup.
 
 To install run:
 
-<pre>\# ansible-playbook -e target=utility-instance.example.org setup.yml</pre>
+<pre># ansible-playbook -e target=utility-instance.example.org setup.yml</pre>
 
 From inside the utility instance, exports can be done with:
 
-<pre>\# ansible-playbook -e target=cluster-nodes /opt/ganeti-backup/deploy/export.yml</pre>
+<pre># ansible-playbook -e target=cluster-nodes /opt/ganeti-backup/deploy/export.yml</pre>
 
 To clean exports after taking backups of them, run (from inside the utility instance):
 
-<pre>\# ansible-playbook -e target=cluster-nodes /opt/ganeti-backup/deploy/clean.yml</pre>
+<pre># ansible-playbook -e target=cluster-nodes /opt/ganeti-backup/deploy/clean.yml</pre>
 
 'cluster-nodes' should be a group name that groups all nodes 
 of the cluster. It should be defined in the ansible inventory
