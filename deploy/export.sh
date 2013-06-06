@@ -1,3 +1,3 @@
 #!/bin/bash
 
-ansible-playbook /opt/ganeti-backup/deploy/export.yml
+ansible-playbook -e target=cluster-nodes /opt/ganeti-backup/deploy/export.yml

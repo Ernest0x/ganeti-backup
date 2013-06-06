@@ -37,10 +37,13 @@ EXPORTS = {
 {% for export in instance.exports %}
         {
             'disk': {{ export.disk }},
-            'partitions': {% if '[' in export.partitions %}{{ export.partitions }}{% else %}'{{ export.partitions }}'{% endif %}
+            'partitions': {% if '[' in export.partitions %}{{ export.partitions }}{% else %}'{{ export.partitions }}'
+{% endif %}
         }{% if not loop.last %},{% endif %}
 {% endfor %}
+
     ]{% if not loop.last %},{% endif %}
+
 {% endfor %}
 }
 
