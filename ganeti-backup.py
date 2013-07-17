@@ -116,12 +116,15 @@ class GanetiBackup(object):
         # change on the original volume during export.
         snapshot_size = int(math.ceil(lvm_dev['size'] * 0.2))
         try:
-            subprocess.check_call(['lvcreate', '-L', str(snapshot_size), '-s',
-                                   '-n', snapshot_name, lvm_dev['devpath']])
+            subprocess.check_output(['lvcreate', '-L', str(snapshot_size),
+                '-s', '-n', snapshot_name, lvm_dev['devpath']],
+                stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as err:
-            raise Error('Could not create snapshot for lvm device \'%s\'' \
-                        ' (returncode: %s, output: %s)' % (
-                        lvm_dev['devpath'], err.returncode, err.output))
+            # Do not raise Error if the snapshot device already exists
+            if err.output.find('already exists in volume group') == -1:
+                raise Error('Could not create snapshot for lvm device \'%s\'' \
+                            ' (returncode: %s, output: %s)' % (
+                            lvm_dev['devpath'], err.returncode, err.output))
 
         snapshot_dev = {
             'devpath': '%s-snap' % lvm_dev['devpath'],
@@ -136,7 +139,8 @@ class GanetiBackup(object):
             raise Error('It is not safe to remove lvm device \'%s\'' % (
                                                       snapshot_devpath,))
         try:
-            subprocess.check_call(['lvremove', '-f', snapshot_devpath])
+            subprocess.check_output(['lvremove', '-f', snapshot_devpath],
+                stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as err:
             raise Error('Could not remove lvm snapshot device \'%s\'' \
                         ' (returncode: %s, output: %s)' % (
