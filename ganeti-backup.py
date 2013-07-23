@@ -115,23 +115,40 @@ class GanetiBackup(object):
         # Here it is assumed that no more than 20% of the blocks will
         # change on the original volume during export.
         snapshot_size = int(math.ceil(lvm_dev['size'] * 0.2))
+        snapshot_devpath = '%s-snap' % lvm_dev['devpath']
+        snapshot_dev = {
+            'devpath': snapshot_devpath,
+            'vg': lvm_dev['vg'],
+            'name': snapshot_name,
+            'size': snapshot_size
+        }
+
         try:
             subprocess.check_output(['lvcreate', '-L', str(snapshot_size),
                 '-s', '-n', snapshot_name, lvm_dev['devpath']],
                 stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as err:
-            # Do not raise Error if the snapshot device already exists
             if err.output.find('already exists in volume group') == -1:
                 raise Error('Could not create snapshot for lvm device \'%s\'' \
                             ' (returncode: %s, output: %s)' % (
                             lvm_dev['devpath'], err.returncode, err.output))
+            else: # If the snapshot already exists, recreate it
+                # First remove any mounts and partition maps
+                try:
+                    partition_table, partitions = self.get_partitions(
+                        snapshot_dev, 'all', with_maps=True)
+                    for partition in partitions:
+                        self.unmount(partition)
+                        sleep(2)
+                    self.unmap_partitions(snapshot_devpath)
+                    sleep(5)
+                except:
+                    pass
+                self.remove_lvm_snapshot(snapshot_devpath)
+                sleep(2)
 
-        snapshot_dev = {
-            'devpath': '%s-snap' % lvm_dev['devpath'],
-            'vg': lvm_dev['vg'],
-            'name': snapshot_name,
-            'size': snapshot_size
-        }
+                return self.create_lvm_snapshot(lvm_dev, snapshot_name)
+
         return snapshot_dev
 
     def remove_lvm_snapshot(self, snapshot_devpath):
@@ -139,8 +156,8 @@ class GanetiBackup(object):
             raise Error('It is not safe to remove lvm device \'%s\'' % (
                                                       snapshot_devpath,))
         try:
-            subprocess.check_output(['lvremove', '-f', snapshot_devpath],
-                stderr=subprocess.STDOUT)
+            subprocess.check_output(['lvremove', '-f', '--noudevsync',
+                snapshot_devpath], stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as err:
             raise Error('Could not remove lvm snapshot device \'%s\'' \
                         ' (returncode: %s, output: %s)' % (
