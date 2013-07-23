@@ -24,14 +24,22 @@ To clean exports after taking backups of them, run (from inside the utility inst
 
 <pre># ansible-playbook -e target=cluster-nodes /opt/ganeti-backup/deploy/clean.yml</pre>
 
-'cluster-nodes' should be a group name that groups all nodes 
-of the cluster. It should be defined in the ansible inventory
-seen by ansible running on the utility instance.
+'cluster-nodes' should be the name of a group that must be defined
+to group all nodes of the cluster. This group must be defined in 
+the ansible inventory accessed by ansible when called from inside
+the utility instance.
 
-inventory_vars.yml.example holds documentation of all the configuration
-options required for the installation and running of ganeti-backup. These
-configuration options should be placed in the ansible inventory used for
-the deployment of utility instances.
+A backup utility could be configured to:
+1) run the export script at pre-backup stage
+2) add the path for the exported instances in the list of the paths
+   to include in the backup archive, and
+3) run the clean script at post-backup stage
+
+The 'inventory_vars.yml.example' file inside 'deploy' directory holds
+documentation of all the configuration options required for the
+installation and running of ganeti-backup. These configuration options
+should be placed in the ansible inventory used for the deployment of
+utility instances.
 
 Known issues and limitations:
 * Importing exported instances back to ganeti is not (yet) implemented.

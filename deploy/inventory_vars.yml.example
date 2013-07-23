@@ -43,15 +43,15 @@ instances_export_format: partclone
 #
 # mounts: Data exports are created as mount points for the partitions
 #         of the exported disks. If an exported disk is being exported
-#         as a whole (see 'whole_disk' option below), then an image file
-#         of the whole disk is created instead, as if the 'files' export
-#         method option had been used.
+#         as a whole (see 'whole_disk' option below), then this option
+#         is ignored and an image file of the whole disk is created
+#         instead, as if the 'files' export method option had been used.
 #         A backup utility/script is expected to run the export script 
 #         first and then include the created mount points for backup.
 #
-# In all cases, the clean script should be run after the execution of the
-# backup utility/script in order to clean any interemediate files, mount
-# points and/or devices created by the export script.
+# In all cases, the clean script should be run after taking backups in
+# order to clean any temporary files, mount points and/or devices 
+# created by the export script.
 instances_export_method: mounts
 
 # instances: configure what to export:
@@ -59,8 +59,9 @@ instances_export_method: mounts
 # This is a list of ganeti instances with each item in the list holding
 # the name of the instance and a list of disk export definitions.
 # Each disk export definition is a dictionary with a 'disk' key associated
-# with a disk number value and a 'partitions' key associated with a pythonic
-# list of partition numbers to export or one of the following values:
+# with a disk number value and a 'partitions' key associated with either a
+# string representing a python list with partition numbers to export or one
+# of the following values:
 #         all: To export separate image files for all the partitions in the
 #              disk.
 #  whole_disk: To export a single image file of the whole disk. This imposes
